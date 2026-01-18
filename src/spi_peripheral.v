@@ -17,7 +17,8 @@ module spi_peripheral (
     // states for peripheral
     typedef enum logic [1:0] {
         IDLE,
-        RECV
+        RECV,
+        FINISH,
     } state_t;
 
     state_t current_state = IDLE;
@@ -46,10 +47,12 @@ module spi_peripheral (
     reg [3:0] bit_count;
     always @(*) begin
         if (ncs_posedge) begin
-            current_state = IDLE;
+            current_state = FINISH;
         end
         case (current_state)
             IDLE: begin
+                assign address = copi_sreg[14:8];
+                assign value = copi_sreg[7:0];
                 assign transaction_ready = 1'b1;
                 bit_count = 4'b0000;
                 if (ncs_negedge) begin
@@ -58,15 +61,25 @@ module spi_peripheral (
             end
             RECV: begin
                 assign transaction_ready = 1'b0;
+                assign address = 7'b0000000;
+                assign value = 8'h00;
                 if (sclk_posedge) begin
                     copi_sreg = {copi_sreg[14:0], COPI};
-                    bit_count = bitcount + 1'b1;
+                    bit_count = bit_count + 1'b1;
                     if (bit_count == 4'b0000) begin
-                        current_state = IDLE;
+                        current_state = FINISH;
                     end else begin
                         current_state = RECV;
                     end
+                end else begin
+                    current_state = RECV;
                 end
+            end
+            FINISH: begin
+                assign address = copi_sreg[14:8];
+                assign value = copi_sreg[7:0];
+                transaction_ready = 1'b1;
+                current_state = IDLE;
             end
         endcase
     end
