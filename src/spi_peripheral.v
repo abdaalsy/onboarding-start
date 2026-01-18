@@ -78,7 +78,7 @@ module spi_peripheral (
             FINISH: begin
                 assign address = copi_sreg[14:8];
                 assign value = copi_sreg[7:0];
-                transaction_ready = 1'b1;
+                assign transaction_ready = 1'b1;
                 current_state = IDLE;
             end
         endcase
