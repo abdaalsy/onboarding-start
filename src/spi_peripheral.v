@@ -45,9 +45,10 @@ module spi_peripheral (
         // check if we're in the reset state
         if (!rst_n) begin
             current_state <= RESET;
+        end else begin 
+            current_state <= next_state;
         end
         // shift our SCLK and nCS registers
-        current_state <= next_state;
         sclk_sreg <= {sclk_sreg[1:0], SCLK};
         ncs_sreg <= {ncs_sreg[1:0], nCS};
         
@@ -72,11 +73,6 @@ module spi_peripheral (
                 transaction_ready <= 1'b1;
                 bit_count <= 5'h00;
                 copi_sreg <= 16'h0000;
-                en_reg_out_7_0 <= 8'h00;
-                en_reg_out_15_8 <= 8'h00;
-                en_reg_pwm_7_0 <= 8'h00;
-                en_reg_pwm_15_8 <= 8'h00;
-                pwm_duty_cycle <= 8'h00;
             end
             RECV: begin 
                 address <= 7'b0000000;
@@ -86,24 +82,16 @@ module spi_peripheral (
                     copi_sreg <= {copi_sreg[14:0], COPI};
                     bit_count <= bit_count + 1'b1;
                 end
-                en_reg_out_7_0 <= 8'h00;
-                en_reg_out_15_8 <= 8'h00;
-                en_reg_pwm_7_0 <= 8'h00;
-                en_reg_pwm_15_8 <= 8'h00;
-                pwm_duty_cycle <= 8'h00;
             end
             FINISH: begin 
-                address <= copi_sreg[14:8];
-                value <= copi_sreg[7:0];
                 transaction_ready <= 1'b0;
-                copi_sreg <= copi_sreg;
                 bit_count <= 5'h00;
-                case (address)
-                    7'b0000000: en_reg_out_7_0 <= value;
-                    7'b0000001: en_reg_out_15_8 <= value;
-                    7'b0000010: en_reg_pwm_7_0 <= value;
-                    7'b0000011: en_reg_pwm_15_8 <= value;
-                    7'b0000100: pwm_duty_cycle <= value;
+                case (copi_sreg[14:8])
+                    7'b0000000: en_reg_out_7_0 <= copi_sreg[7:0];
+                    7'b0000001: en_reg_out_15_8 <= copi_sreg[7:0];
+                    7'b0000010: en_reg_pwm_7_0 <= copi_sreg[7:0];
+                    7'b0000011: en_reg_pwm_15_8 <= copi_sreg[7:0];
+                    7'b0000100: pwm_duty_cycle <= copi_sreg[7:0];
                     default: ;
                 endcase
             end
