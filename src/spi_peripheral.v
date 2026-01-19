@@ -108,4 +108,4 @@ module spi_peripheral (
             end
         endcase
     end
-
+endmodule
