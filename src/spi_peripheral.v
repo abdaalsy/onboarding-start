@@ -68,7 +68,6 @@ module spi_peripheral (
                     transaction_ready <= 1'b0;
                     if (sclk_posedge) begin
                         copi_sreg <= {copi_sreg[14:0], COPI};
-                        bit_count <= bit_count + 1'b1;
                     end
                 end
                 FINISH: begin 
@@ -95,7 +94,7 @@ module spi_peripheral (
         end else begin 
             case (current_state)
                 IDLE: if (ncs_negedge) next_state = RECV;
-                RECV: if (bit_count == 5'b10000) next_state = FINISH;
+                RECV: if (ncs_posedge) next_state = FINISH;
                 FINISH: next_state = IDLE;
             endcase
         end
