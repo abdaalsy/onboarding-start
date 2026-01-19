@@ -45,6 +45,8 @@ module spi_peripheral (
             transaction_ready <= 1'b0;
             bit_count <= 5'h00;
             copi_sreg <= 16'h0000;
+            sclk_sreg       <= 3'b111;
+            ncs_sreg        <= 3'b111;
             en_reg_out_7_0 <= 8'h00;
             en_reg_out_15_8 <= 8'h00;
             en_reg_pwm_7_0 <= 8'h00;
