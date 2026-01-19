@@ -11,7 +11,11 @@ module spi_peripheral (
     input   wire    nCS,
     input   wire    SCLK,
     input   wire    COPI,
-    output wire[7:0] en_reg_out_7_0, en_reg_out_15_8, en_reg_pwm_7_0, en_reg_pwm_15_8, pwm_duty_cycle
+    output  wire [7:0] en_reg_out_7_0,
+    output  wire [7:0] en_reg_out_15_8,
+    output  wire [7:0] en_reg_pwm_7_0,
+    output  wire [7:0] en_reg_pwm_15_8,
+    output  wire [7:0] pwm_duty_cycle
 );
     // states for peripheral
     typedef enum logic [1:0] {
