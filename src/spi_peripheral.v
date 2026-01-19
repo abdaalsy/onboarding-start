@@ -93,11 +93,11 @@ module spi_peripheral (
                 value = copi_sreg[7:0];
                 transaction_ready = 1'b1;
                 case (address) 
-                    7'0000000: en_reg_out_7_0 = value;   // address 0x00
-                    7'0000001: en_reg_out_15_8 = value;  // address 0x01
-                    7'0000010: en_reg_pwm_7_0 = value;   // address 0x02
-                    7'0000011: en_reg_pwm_15_8 = value;  // address 0x03
-                    7'0000100: pwm_duty_cycle = value;   // address 0x04
+                    7'b0000000: en_reg_out_7_0 = value;   // address 0x00
+                    7'b0000001: en_reg_out_15_8 = value;  // address 0x01
+                    7'b0000010: en_reg_pwm_7_0 = value;   // address 0x02
+                    7'b0000011: en_reg_pwm_15_8 = value;  // address 0x03
+                    7'b0000100: pwm_duty_cycle = value;   // address 0x04
                     default: current_state = IDLE;              // this will catch out of bounds address
                 endcase
                 current_state = IDLE;
