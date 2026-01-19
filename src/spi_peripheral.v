@@ -11,11 +11,11 @@ module spi_peripheral (
     input   wire    nCS,
     input   wire    SCLK,
     input   wire    COPI,
-    output  reg [7:0] en_reg_out_7_0,
-    output  reg [7:0] en_reg_out_15_8,
-    output  reg [7:0] en_reg_pwm_7_0,
-    output  reg [7:0] en_reg_pwm_15_8,
-    output  reg [7:0] pwm_duty_cycle
+    output  reg [7:0] en_reg_out_7_0 = 8'h00,
+    output  reg [7:0] en_reg_out_15_8 = 8'h00,
+    output  reg [7:0] en_reg_pwm_7_0 = 8'h00,
+    output  reg [7:0] en_reg_pwm_15_8 = 8'h00,
+    output  reg [7:0] pwm_duty_cycle = 8'h00
 );
     // states for peripheral
     typedef enum logic [1:0] {
@@ -44,7 +44,7 @@ module spi_peripheral (
         ncs_sreg <= {ncs_sreg[1:0], nCS};
     end
 
-    // for both registers, the newest flip-flop was just samples and thus needs time to settle
+    // for both registers, the newest flip-flop was just sampled and thus needs time to settle
     // so we're gonna perform our condition on the 2 stable older values
     wire sclk_posedge = (sclk_sreg[1] == 1'b1 && sclk_sreg[2] == 1'b0);
     wire ncs_negedge = (ncs_sreg[1] == 1'b0 && ncs_sreg[2] == 1'b1);
