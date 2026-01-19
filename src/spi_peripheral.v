@@ -19,7 +19,6 @@ module spi_peripheral (
 );
     // states for peripheral
     typedef enum logic [1:0] {
-        RESET,
         IDLE,
         RECV,
         FINISH
@@ -28,8 +27,6 @@ module spi_peripheral (
     
     // registers for deciding output
     reg [5:0] bit_count;
-    reg [6:0] address;
-    reg [7:0] value;
     reg transaction_ready;
     reg[2:0] sclk_sreg;         // shift reg for SCLK
     reg[2:0] ncs_sreg;          // shift reg for nCS
@@ -44,7 +41,15 @@ module spi_peripheral (
     always @(posedge clk or negedge rst_n) begin
         // check if we're in the reset state
         if (!rst_n) begin
-            current_state <= RESET;
+            current_state <= IDLE;
+            transaction_ready <= 1'b0;
+            bit_count <= 5'h00;
+            copi_sreg <= 16'h0000;
+            en_reg_out_7_0 <= 8'h00;
+            en_reg_out_15_8 <= 8'h00;
+            en_reg_pwm_7_0 <= 8'h00;
+            en_reg_pwm_15_8 <= 8'h00;
+            pwm_duty_cycle <= 8'h00;
         end else begin 
             current_state <= next_state;
         end
@@ -53,28 +58,12 @@ module spi_peripheral (
         ncs_sreg <= {ncs_sreg[1:0], nCS};
         
         case (current_state)
-            RESET: begin 
-                address <= 7'b0000000;
-                value <= 8'h00;
-                transaction_ready <= 1'b0;
-                bit_count <= 5'h00;
-                copi_sreg <= 16'h0000;
-                en_reg_out_7_0 <= 8'h00;
-                en_reg_out_15_8 <= 8'h00;
-                en_reg_pwm_7_0 <= 8'h00;
-                en_reg_pwm_15_8 <= 8'h00;
-                pwm_duty_cycle <= 8'h00;
-            end
             IDLE: begin 
-                address <= 7'b0000000;
-                value <= 8'h00;
                 transaction_ready <= 1'b1;
                 bit_count <= 5'h00;
                 copi_sreg <= 16'h0000;
             end
             RECV: begin 
-                address <= 7'b0000000;
-                value <= 8'h00;
                 transaction_ready <= 1'b0;
                 if (sclk_posedge) begin
                     copi_sreg <= {copi_sreg[14:0], COPI};
