@@ -24,6 +24,7 @@ module spi_peripheral (
         RECV,
         FINISH
     } state_t;
+    state_t current_state;
 
     reg [6:0] address;
     reg [7:0] value;
