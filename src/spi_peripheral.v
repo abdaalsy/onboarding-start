@@ -92,7 +92,6 @@ module spi_peripheral (
             next_state = FINISH;
         end else begin 
             case (current_state)
-                RESET: next_state = IDLE;
                 IDLE: if (ncs_negedge) next_state = RECV;
                 RECV: if (bit_count == 5'b10000) next_state = FINISH;
                 FINISH: next_state = IDLE;
