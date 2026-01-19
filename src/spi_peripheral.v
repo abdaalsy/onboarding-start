@@ -54,37 +54,37 @@ module spi_peripheral (
             pwm_duty_cycle <= 8'h00;
         end else begin 
             current_state <= next_state;
-        end
-        // shift our SCLK and nCS registers
-        sclk_sreg <= {sclk_sreg[1:0], SCLK};
-        ncs_sreg <= {ncs_sreg[1:0], nCS};
-        
-        case (current_state)
-            IDLE: begin 
-                transaction_ready <= 1'b1;
-                bit_count <= 5'h00;
-                copi_sreg <= 16'h0000;
-            end
-            RECV: begin 
-                transaction_ready <= 1'b0;
-                if (sclk_posedge) begin
-                    copi_sreg <= {copi_sreg[14:0], COPI};
-                    bit_count <= bit_count + 1'b1;
+            // shift our SCLK and nCS registers
+            sclk_sreg <= {sclk_sreg[1:0], SCLK};
+            ncs_sreg <= {ncs_sreg[1:0], nCS};
+            
+            case (current_state)
+                IDLE: begin 
+                    transaction_ready <= 1'b1;
+                    bit_count <= 5'h00;
+                    copi_sreg <= 16'h0000;
                 end
-            end
-            FINISH: begin 
-                transaction_ready <= 1'b0;
-                bit_count <= 5'h00;
-                case (copi_sreg[14:8])
-                    7'b0000000: en_reg_out_7_0 <= copi_sreg[7:0];
-                    7'b0000001: en_reg_out_15_8 <= copi_sreg[7:0];
-                    7'b0000010: en_reg_pwm_7_0 <= copi_sreg[7:0];
-                    7'b0000011: en_reg_pwm_15_8 <= copi_sreg[7:0];
-                    7'b0000100: pwm_duty_cycle <= copi_sreg[7:0];
-                    default: ;
-                endcase
-            end
-        endcase
+                RECV: begin 
+                    transaction_ready <= 1'b0;
+                    if (sclk_posedge) begin
+                        copi_sreg <= {copi_sreg[14:0], COPI};
+                        bit_count <= bit_count + 1'b1;
+                    end
+                end
+                FINISH: begin 
+                    transaction_ready <= 1'b0;
+                    bit_count <= 5'h00;
+                    case (copi_sreg[14:8])
+                        7'b0000000: en_reg_out_7_0 <= copi_sreg[7:0];
+                        7'b0000001: en_reg_out_15_8 <= copi_sreg[7:0];
+                        7'b0000010: en_reg_pwm_7_0 <= copi_sreg[7:0];
+                        7'b0000011: en_reg_pwm_15_8 <= copi_sreg[7:0];
+                        7'b0000100: pwm_duty_cycle <= copi_sreg[7:0];
+                        default: ;
+                    endcase
+                end
+            endcase
+        end
     end
     
     // combinational logic to determine next state
