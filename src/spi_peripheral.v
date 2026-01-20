@@ -73,14 +73,16 @@ module spi_peripheral (
                 FINISH: begin 
                     transaction_ready <= 1'b0;
                     bit_count <= 5'h00;
-                    case (copi_sreg[14:8])
-                        7'b0000000: en_reg_out_7_0 <= copi_sreg[7:0];
-                        7'b0000001: en_reg_out_15_8 <= copi_sreg[7:0];
-                        7'b0000010: en_reg_pwm_7_0 <= copi_sreg[7:0];
-                        7'b0000011: en_reg_pwm_15_8 <= copi_sreg[7:0];
-                        7'b0000100: pwm_duty_cycle <= copi_sreg[7:0];
-                        default: ;
-                    endcase
+                    if (copi_sreg[15]) begin
+                        case (copi_sreg[14:8])
+                            7'b0000000: en_reg_out_7_0 <= copi_sreg[7:0];
+                            7'b0000001: en_reg_out_15_8 <= copi_sreg[7:0];
+                            7'b0000010: en_reg_pwm_7_0 <= copi_sreg[7:0];
+                            7'b0000011: en_reg_pwm_15_8 <= copi_sreg[7:0];
+                            7'b0000100: pwm_duty_cycle <= copi_sreg[7:0];
+                            default: ;
+                        endcase
+                    end
                 end
             endcase
         end
