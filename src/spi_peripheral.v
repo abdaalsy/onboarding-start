@@ -73,12 +73,12 @@ module spi_peripheral (
                 FINISH: begin 
                     transaction_ready <= 1'b0;
                     bit_count <= 5'h00;
-                    case (copi_sreg[14:8])
-                        7'b0000000: en_reg_out_7_0 <= copi_sreg[7:0];
-                        7'b0000001: en_reg_out_15_8 <= copi_sreg[7:0];
-                        7'b0000010: en_reg_pwm_7_0 <= copi_sreg[7:0];
-                        7'b0000011: en_reg_pwm_15_8 <= copi_sreg[7:0];
-                        7'b0000100: pwm_duty_cycle <= copi_sreg[7:0];
+                    case ({copi_sreg[8], copi_sreg[9], copi_sreg[10], copi_sreg[11], copi_sreg[12], copi_sreg[13], copi_sreg[14]})
+                        7'b0000000: en_reg_out_7_0 <= {copi_sreg[0], copi_sreg[1], copi_sreg[2], copi_sreg[3], copi_sreg[4], copi_sreg[5], copi_sreg[6], copi_sreg[7]};
+                        7'b0000001: en_reg_out_15_8 <= {copi_sreg[0], copi_sreg[1], copi_sreg[2], copi_sreg[3], copi_sreg[4], copi_sreg[5], copi_sreg[6], copi_sreg[7]};
+                        7'b0000010: en_reg_pwm_7_0 <= {copi_sreg[0], copi_sreg[1], copi_sreg[2], copi_sreg[3], copi_sreg[4], copi_sreg[5], copi_sreg[6], copi_sreg[7]};
+                        7'b0000011: en_reg_pwm_15_8 <= {copi_sreg[0], copi_sreg[1], copi_sreg[2], copi_sreg[3], copi_sreg[4], copi_sreg[5], copi_sreg[6], copi_sreg[7]};
+                        7'b0000100: pwm_duty_cycle <= {copi_sreg[0], copi_sreg[1], copi_sreg[2], copi_sreg[3], copi_sreg[4], copi_sreg[5], copi_sreg[6], copi_sreg[7]};
                         default: ;
                     endcase
                 end
