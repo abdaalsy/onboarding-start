@@ -192,7 +192,7 @@ async def test_pwm_freq(dut):
         await ClockCycles(dut.clk, 1)
         num_clock_cycles += 1
         edge_clock_cycles[1] += 1 if reached_edge_final else 0
-        edge_clock_cycles[0] += 1 if reached_edge_inital else 0
+        edge_clock_cycles[0] += 1 if reached_edge_initial else 0
         # check if we're at a rising edge
         if (uo_out_value == 1) and (uo_out_value_old == 0):
             # If we haven't reached the initial edge yet
@@ -208,9 +208,7 @@ async def test_pwm_freq(dut):
         uo_out_value_old = dut.uo_out.value
 
     # Calculate freq and check if within 1% tolerance
-    time_initial_edge = float(num_clock_cycles[0]) * 100.0e-9
-    time_final_edge = float(num_clock_cycles[1]) * 100.0e-9
-    freq = 1.0/(time_final_edge - time_initial_edge)
+    freq = edge_clock_cycles[1] - edge_clock_cycles[0]
     assert (freq>=2970) and (freq<=3030)
     dut._log.info("PWM Frequency test completed successfully")
 
