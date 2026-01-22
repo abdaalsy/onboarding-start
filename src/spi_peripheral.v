@@ -18,12 +18,13 @@ module spi_peripheral (
     output  reg [7:0] pwm_duty_cycle
 );
     // states for peripheral
-    typedef enum logic [1:0] {
-        IDLE,
-        RECV,
-        FINISH
-    } state_t;
-    state_t current_state, next_state;
+    localparam IDLE   = 2'b00;
+    localparam RECV   = 2'b01;
+    localparam FINISH = 2'b10;
+
+    // Replace state_t with standard reg vectors
+    reg [1:0] current_state;
+    reg [1:0] next_state;
     
     // registers for deciding output
     reg [5:0] bit_count;
