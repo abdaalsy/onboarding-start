@@ -248,7 +248,7 @@ async def test_pwm_duty(dut):
         assert dut.uo_out[0].value == 1
     
     dut._log.info("Setting pwm duty cycle to 0%")
-    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0xFF)
+    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0x00)
     await ClockCycles(dut.clk, 30000)
     sim_time_initial = get_sim_time(units="ns") * 1.0e-9
     while (get_sim_time(units="ns")*1.0e-9 <= sim_time_initial+(1.0/3000.0)):
