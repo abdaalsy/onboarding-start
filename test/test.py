@@ -181,10 +181,12 @@ async def test_pwm_freq(dut):
     await ClockCycles(dut.clk, 30000)
     
     # Determine time till first and second rising edge.
-    await RisingEdge(dut.uo_out[0])
-    edge_time_initial = get_sim_time(units="ns")
-    await RisingEdge(dut.uo_out[0])
-    edge_time_final = get_sim_time(units="ns")
+    await Edge(dut.uo_out)
+    if (dut.uo_out.value == 1):
+        edge_time_initial = get_sim_time(units="ns")
+    await Edge(dut.uo_out)
+    if (dut.uo_out.value == 1):
+        edge_time_final = get_sim_time(units="ns")
 
     # Calculate freq and check if within 1% tolerance
     freq = 1.0/(edge_time_final - edge_time_initial)
