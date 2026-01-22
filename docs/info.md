@@ -8,16 +8,15 @@ You can also include images in this folder and reference them in the markdown. E
 -->
 
 ## How it works
-SPI Peripheral:
-- The slave device in the SPI protocol
-- We're gonna configure it so that when it receives valid inputs from the controller (master), it'll conigure the specified registers with the specified values
-- In more detail: On every rising edge of SCLK (ui_in\[0\]), we sample a value from COPI (ui_in\[1\]) so long as the condition on nCS (ui_in\[2\] = '0') passes. 
-- We determine if we're on the rising edge by storing the 2 most recent SCLK values, if they are in a way such that a rising edge is evident, we proceed with the sampling.
-- Unlike I2C, there's no start or end phases, you simply de-assert nCS by setting it to 1. Our perpheral module need only look for this condition.
-- When we're sampling data, again we do it on the rising edge, but that data gets shifted out on the falling edge. Our peripheral module is gonna have outputs of the data its receiving, so whatever is driven by this output is gonna maintaing its value until it gets shifted out at the falling edge of SCLK. 
-## How to test
-Explain how to use your project
-placeholder text
-## External hardware
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
-placeholder text
+### SPI Peripheral
+I implemented the SPI peripheral as a state machine with the follow states:
+- IDLE: Whenever the peripheral is available to start a transaction it will be in this state
+- RECV: The state the SPI peripheral enters after the IDLE state when its nCS port is set to 0. It remains in this state as it receives bits.
+- FINISH: After the 16 bits of the transaction have been sent, the peripheral enters this state to update the specified register.
+
+### PWM tests
+I implemented tests to validate PWM frequency, and various duty cycles (0%, 50%, 100%). For the frequency test, I simply noted down the current time for two consecutive rising edges, the difference of which would be the period. I then took the reciprocal of the period and asserted that its within the listed 1% tolerance.
+
+For the duty cycle test, I split it into 3 separate tests, one per configured duty cycle. Starting with 50%, we already know that the PWM device outputs at a frequency of 3 kHz, giving us the period as well. Then, I stored the time for a rising edge, and the subsequent falling edge. Finally, I took the difference between these times and asserted that it's within 1% of a half PWM period.
+
+I could not use the same technique for the 0% and 100% tests as there would be no rising or falling edges. Instead, I noted down an initial time, and kept sampling the output until an entire PWM period has passed. For 0% duty cycle, if the output was ever not 0 the test would fail. For 100% duty cycle, if the output was ever not 1 the test would fail.
