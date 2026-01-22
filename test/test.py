@@ -244,6 +244,7 @@ async def test_pwm_duty(dut):
     await ClockCycles(dut.clk, 30000)
     sim_time_initial = get_sim_time(units="ns") * 1.0e-9
     while (get_sim_time(units="ns")*1.0e-9 <= sim_time_initial+(1.0/3000.0)):
+        await ClockCycles(dut.clk, 1)
         assert dut.uo_out[0].value == 1
     
     dut._log.info("Setting pwm duty cycle to 0%")
@@ -251,6 +252,7 @@ async def test_pwm_duty(dut):
     await ClockCycles(dut.clk, 30000)
     sim_time_initial = get_sim_time(units="ns") * 1.0e-9
     while (get_sim_time(units="ns")*1.0e-9 <= sim_time_initial+(1.0/3000.0)):
+        await ClockCycles(dut.clk, 1)
         assert dut.uo_out[0].value == 0
 
     dut._log.info("PWM Duty Cycle test completed successfully")
