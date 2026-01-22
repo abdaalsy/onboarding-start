@@ -182,6 +182,7 @@ async def test_pwm_freq(dut):
     
     # Determine time till first and second rising edge.
     await Edge(dut.uo_out)
+    await Edge(dut.uo_out)
     print(dut.uo_out)
     if (dut.uo_out[0].value == 1):
         edge_time_initial = get_sim_time(units="ns")
