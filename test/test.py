@@ -7,6 +7,7 @@ from cocotb.triggers import RisingEdge
 from cocotb.triggers import ClockCycles
 from cocotb.types import Logic
 from cocotb.types import LogicArray
+from cocotb.utils import get_sim_time
 
 async def await_half_sclk(dut):
     """Wait for the SCLK signal to go high or low."""
@@ -168,47 +169,25 @@ async def test_pwm_freq(dut):
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
 
-    # Set pwm peripheral to PWM output mode at 50% duty cycle on uo_out[0] so that we can sample rising edges
+    # Set pwm peripheral to PWM output mode at 50% duty cycle on uo_out so that we can sample rising edges
     dut._log.info("Write transaction, address 0x00, data 0x01")
-    ui_in_val = await send_spi_transaction(dut, 1, 0x00, 0x01)  # Enable output on uo_out[0]
+    ui_in_val = await send_spi_transaction(dut, 1, 0x00, 0xFF)  # Enable output on uo_out
     await ClockCycles(dut.clk, 30000)
     dut._log.info("Write transaction, address 0x02, data 0x01")
-    ui_in_val = await send_spi_transaction(dut, 1, 0x02, 0x01)  # Enable pwm on uo_out[0]
+    ui_in_val = await send_spi_transaction(dut, 1, 0x02, 0xFF)  # Enable pwm on uo_out
     await ClockCycles(dut.clk, 30000)
     dut._log.info("Write transaction, address 0x04, data 0x80")
     ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0x80)  # set pwm duty cycle to 50%
     await ClockCycles(dut.clk, 30000)
     
-    
-    # Determine number of clock cycles it took to reach posedge final (element 2), and posedge initial (element 1)
-    edge_clock_cycles = [0, 0]
-    reached_edge_final = False
-    reached_edge_initial = False
-    num_clock_cycles = 0
-    uo_out_value = dut.uo_out.value
-    uo_out_value_old = uo_out_value
-    while True:
-        uo_out_value = dut.uo_out.value
-        await ClockCycles(dut.clk, 1)
-        num_clock_cycles += 1
-        edge_clock_cycles[1] += 1 if reached_edge_final else 0
-        edge_clock_cycles[0] += 1 if reached_edge_initial else 0
-        # check if we're at a rising edge
-        if (uo_out_value == 1) and (uo_out_value_old == 0):
-            # If we haven't reached the initial edge yet
-            if not reached_edge_initial:
-                edge_clock_cycles[0] = num_clock_cycles
-                reached_edge_initial = True
-            # If we've reached the initial edge but not the final edge yet
-            if reached_edge_initial and (not reached_edge_final):
-                edge_clock_cycles[1] = num_clock_cycles
-                reached_edge_final = True
-        if reached_edge_initial and reached_edge_final:
-            break
-        uo_out_value_old = dut.uo_out.value
+    # Determine time till first and second rising edge.
+    await RisingEdge(dut.uo_out)
+    edge_time_initial = get_sim_time(units="ns")
+    await RisingEdge(dut.uo_out)
+    edge_time_final = get_sim_time(units="ns")
 
     # Calculate freq and check if within 1% tolerance
-    freq = edge_clock_cycles[1] - edge_clock_cycles[0]
+    freq = 1.0/(edge_time_final - edge_time_initial)
     assert (freq>=2970) and (freq<=3030)
     dut._log.info("PWM Frequency test completed successfully")
 
