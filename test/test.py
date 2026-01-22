@@ -193,7 +193,7 @@ async def test_pwm_freq(dut):
         edge_time_final = get_sim_time(units="ns")
 
     # Calculate freq and check if within 1% tolerance
-    freq = 1.0/(edge_time_final*100.0e-9 - edge_time_initial*100.0e-9)
+    freq = 1.0/(edge_time_final*1.0e-9 - edge_time_initial*1.0e-9)
     assert (freq>=2970) and (freq<=3030)
     dut._log.info("PWM Frequency test completed successfully")
 
