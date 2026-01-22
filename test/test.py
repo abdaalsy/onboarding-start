@@ -200,5 +200,57 @@ async def test_pwm_freq(dut):
 
 @cocotb.test()
 async def test_pwm_duty(dut):
-    # Write your test here
+    # test pwm 0%, 50%, and 100%
+    # Set the clock period to 100 ns (10 MHz)
+    clock = Clock(dut.clk, 100, units="ns")
+    cocotb.start_soon(clock.start())
+
+    # Reset
+    dut._log.info("Reset")
+    dut.ena.value = 1
+    ncs = 1
+    bit = 0
+    sclk = 0
+    dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 5)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 5)
+
+    # Set pwm peripheral to PWM output mode at 50% duty cycle on uo_out[0] so that we can sample rising edges
+    dut._log.info("Enabling output on uo_out[0]")
+    ui_in_val = await send_spi_transaction(dut, 1, 0x00, 0x01)
+    await ClockCycles(dut.clk, 30000)
+    dut._log.info("Enable pwm on uo_out[0]")
+    ui_in_val = await send_spi_transaction(dut, 1, 0x02, 0x01) 
+    await ClockCycles(dut.clk, 30000)
+    dut._log.info("Setting pwm duty cycle to 50%")
+    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0x80)
+    await ClockCycles(dut.clk, 30000)
+
+    # for 50% we know the freq is 3000Hz, lets just get the time between rising and falling edge of uo_out and divide by period
+    await Edge(dut.uo_out)
+    await Edge(dut.uo_out)
+    time_rising_edge = get_sim_time(units="ns") * 1.0e-9
+    await Edge(dut.uo_out)
+    time_falling_edge = get_sim_time(units="ns") * 1.0e-9
+    half_pwm_period = 1.0/3000.0 * (0.5)
+    active_time = time_falling_edge - time_rising_edge
+    assert (active_time >= half_pwm_period*0.99) and (active_time <= half_pwm_period * 1.01)
+
+    # for 0% and 100%, we should be able to traverse an entire pwm period (1/3000 seconds) without seeing any change in the value of uo_out[0]
+    dut._log.info("Setting pwm duty cycle to 100%")
+    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0xFF)
+    await ClockCycles(dut.clk, 30000)
+    sim_time_initial = get_sim_time(units="ns") * 1.0e-9
+    while (get_sim_time(units="ns")*1.0e-9 <= sim_time_initial+(1.0/3000.0)):
+        assert dut.uo_out[0].value == 1
+    
+    dut._log.info("Setting pwm duty cycle to 0%")
+    ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0xFF)
+    await ClockCycles(dut.clk, 30000)
+    sim_time_initial = get_sim_time(units="ns") * 1.0e-9
+    while (get_sim_time(units="ns")*1.0e-9 <= sim_time_initial+(1.0/3000.0)):
+        assert dut.uo_out[0].value == 0
+
     dut._log.info("PWM Duty Cycle test completed successfully")
