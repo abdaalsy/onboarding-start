@@ -169,21 +169,21 @@ async def test_pwm_freq(dut):
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
 
-    # Set pwm peripheral to PWM output mode at 50% duty cycle on uo_out so that we can sample rising edges
+    # Set pwm peripheral to PWM output mode at 50% duty cycle on uo_out[0] so that we can sample rising edges
     dut._log.info("Write transaction, address 0x00, data 0x01")
-    ui_in_val = await send_spi_transaction(dut, 1, 0x00, 0xFF)  # Enable output on uo_out
+    ui_in_val = await send_spi_transaction(dut, 1, 0x00, 0x01)  # Enable output on uo_out[0]
     await ClockCycles(dut.clk, 30000)
     dut._log.info("Write transaction, address 0x02, data 0x01")
-    ui_in_val = await send_spi_transaction(dut, 1, 0x02, 0xFF)  # Enable pwm on uo_out
+    ui_in_val = await send_spi_transaction(dut, 1, 0x02, 0x01)  # Enable pwm on uo_out[0]
     await ClockCycles(dut.clk, 30000)
     dut._log.info("Write transaction, address 0x04, data 0x80")
     ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0x80)  # set pwm duty cycle to 50%
     await ClockCycles(dut.clk, 30000)
     
     # Determine time till first and second rising edge.
-    await RisingEdge(dut.uo_out)
+    await RisingEdge(dut.uo_out[0])
     edge_time_initial = get_sim_time(units="ns")
-    await RisingEdge(dut.uo_out)
+    await RisingEdge(dut.uo_out[0])
     edge_time_final = get_sim_time(units="ns")
 
     # Calculate freq and check if within 1% tolerance
