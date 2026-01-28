@@ -76,6 +76,7 @@ module spi_peripheral (
                         endcase
                     end
                 end
+                2'b11: ; // this state will never be encountered
             endcase
         end
     end
@@ -90,7 +91,7 @@ module spi_peripheral (
                 IDLE: if (ncs_negedge) next_state = RECV;
                 RECV: if (ncs_posedge) next_state = FINISH;
                 FINISH: next_state = IDLE;
-                2'b00: ; // This state will never be encountered
+                2'b11: ; // This state will never be encountered
             endcase
         end
     end
