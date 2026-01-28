@@ -27,8 +27,6 @@ module spi_peripheral (
     reg [1:0] next_state;
     
     // registers for deciding output
-    reg [5:0] bit_count;
-    reg transaction_ready;
     reg[2:0] sclk_sreg;         // shift reg for SCLK
     reg[2:0] ncs_sreg;          // shift reg for nCS
     reg[15:0] copi_sreg;        // shift reg for COPI
@@ -43,8 +41,6 @@ module spi_peripheral (
         // check if we're in the reset state
         if (!rst_n) begin
             current_state <= IDLE;
-            transaction_ready <= 1'b0;
-            bit_count <= 5'h00;
             copi_sreg <= 16'h0000;
             sclk_sreg       <= 3'b111;
             ncs_sreg        <= 3'b111;
@@ -61,19 +57,14 @@ module spi_peripheral (
             
             case (current_state)
                 IDLE: begin 
-                    transaction_ready <= 1'b1;
-                    bit_count <= 5'h00;
                     copi_sreg <= 16'h0000;
                 end
                 RECV: begin 
-                    transaction_ready <= 1'b0;
                     if (sclk_posedge) begin
                         copi_sreg <= {copi_sreg[14:0], COPI};
                     end
                 end
                 FINISH: begin 
-                    transaction_ready <= 1'b0;
-                    bit_count <= 5'h00;
                     if (copi_sreg[15]) begin
                         case (copi_sreg[14:8])
                             7'b0000000: en_reg_out_7_0 <= copi_sreg[7:0];
@@ -99,6 +90,7 @@ module spi_peripheral (
                 IDLE: if (ncs_negedge) next_state = RECV;
                 RECV: if (ncs_posedge) next_state = FINISH;
                 FINISH: next_state = IDLE;
+                2'b00: ; // This state will never be encountered
             endcase
         end
     end
