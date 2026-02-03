@@ -3,7 +3,7 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Edge
+from cocotb.triggers import RisingEdge, FallingEdge
 from cocotb.triggers import ClockCycles
 from cocotb.types import Logic
 from cocotb.types import LogicArray
@@ -229,12 +229,13 @@ async def test_pwm_duty(dut):
     await ClockCycles(dut.clk, 30000)
 
     # for 50% we know the freq is 3000Hz, lets just get the time between rising and falling edge of uo_out and divide by period
-    await Edge(dut.uo_out)
-    await Edge(dut.uo_out)
+    await RisingEdge(dut.uo_out)
     time_rising_edge = get_sim_time(units="ns") * 1.0e-9
-    await Edge(dut.uo_out)
+    await FallingEdge(dut.uo_out)
     time_falling_edge = get_sim_time(units="ns") * 1.0e-9
-    half_pwm_period = 1.0/3000.0 * (0.5)
+    await RisingEdge(dut.uo_out)
+    time_rising_edge2 = get_sim_time(units="ns") * 1.0e-9
+    half_pwm_period = (time_rising_edge2 - time_rising_edge) * (0.5)
     active_time = time_falling_edge - time_rising_edge
     assert (active_time >= half_pwm_period*0.99) and (active_time <= half_pwm_period * 1.01)
 
@@ -243,7 +244,7 @@ async def test_pwm_duty(dut):
     ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0xFF)
     await ClockCycles(dut.clk, 30000)
     sim_time_initial = get_sim_time(units="ns") * 1.0e-9
-    while (get_sim_time(units="ns")*1.0e-9 <= sim_time_initial+(1.0/3000.0)):
+    while (get_sim_time(units="ns")*1.0e-9 <= sim_time_initial+(half_pwm_period * 2)):
         await ClockCycles(dut.clk, 1)
         assert dut.uo_out[0].value == 1
     
@@ -251,7 +252,7 @@ async def test_pwm_duty(dut):
     ui_in_val = await send_spi_transaction(dut, 1, 0x04, 0x00)
     await ClockCycles(dut.clk, 30000)
     sim_time_initial = get_sim_time(units="ns") * 1.0e-9
-    while (get_sim_time(units="ns")*1.0e-9 <= sim_time_initial+(1.0/3000.0)):
+    while (get_sim_time(units="ns")*1.0e-9 <= sim_time_initial+(half_pwm_period * 2)):
         await ClockCycles(dut.clk, 1)
         assert dut.uo_out[0].value == 0
 
