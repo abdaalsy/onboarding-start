@@ -152,17 +152,13 @@ async def test_spi(dut):
 
 async def wait_for_rising_edge_on_bit(signal, bit_index):
     bit_mask = 1 << bit_index
+    last_bit_value = (int(signal.value) & bit_mask) != 0
     while True:
         await Edge(signal)
-        current_value = int(signal.value)
-        if (current_value & bit_mask) != 0:
-            await cocotb.triggers.Combine(Edge(signal), cocotb.triggers.Event()) # Use Combine to not hang
-            if (int(signal.value) >> bit_index) & 1:
-                previous_value = current_value 
-                await Edge(signal)
-                current_value = int(signal.value)
-                if not (previous_value & bit_mask) and (current_value & bit_mask):
-                   return # Rising edge detected
+        current_bit_value = (int(signal.value) & bit_mask) != 0
+        if not last_bit_value and current_bit_value:
+            return  # Rising edge detected
+        last_bit_value = current_bit_value
 
 async def wait_for_falling_edge_on_bit(signal, bit_index):
     bit_mask = 1 << bit_index
