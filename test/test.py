@@ -156,7 +156,7 @@ async def wait_for_rising_edge_on_bit(signal, bit_index):
         await Edge(signal)
         current_value = int(signal.value)
         if (current_value & bit_mask) != 0:
-            await cocotb.triggers.Combine(Edge(signal), cocotb.triggers.event.Event()) # Use Combine to not hang
+            await cocotb.triggers.Combine(Edge(signal), cocotb.triggers.Event()) # Use Combine to not hang
             if (int(signal.value) >> bit_index) & 1:
                 previous_value = current_value 
                 await Edge(signal)
