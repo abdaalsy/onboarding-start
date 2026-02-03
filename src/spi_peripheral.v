@@ -29,6 +29,7 @@ module spi_peripheral (
     // registers for deciding output
     reg[2:0] sclk_sreg;         // shift reg for SCLK
     reg[2:0] ncs_sreg;          // shift reg for nCS
+    reg[2:0] copi_sync;         // synchronizer for COPI
     reg[15:0] copi_sreg;        // shift reg for COPI
 
     // for both registers, the newest flip-flop was just sampled and thus needs time to settle
@@ -44,6 +45,7 @@ module spi_peripheral (
             copi_sreg <= 16'h0000;
             sclk_sreg       <= 3'b111;
             ncs_sreg        <= 3'b111;
+            copi_sync       <= 3'b111;
             en_reg_out_7_0 <= 8'h00;
             en_reg_out_15_8 <= 8'h00;
             en_reg_pwm_7_0 <= 8'h00;
@@ -54,6 +56,7 @@ module spi_peripheral (
             // shift our SCLK and nCS registers
             sclk_sreg <= {sclk_sreg[1:0], SCLK};
             ncs_sreg <= {ncs_sreg[1:0], nCS};
+            copi_sync <= {copi_sync[1:0], COPI};
             
             case (current_state)
                 IDLE: begin 
@@ -61,7 +64,7 @@ module spi_peripheral (
                 end
                 RECV: begin 
                     if (sclk_posedge) begin
-                        copi_sreg <= {copi_sreg[14:0], COPI};
+                        copi_sreg <= {copi_sreg[14:0], copi_sync[2]};
                     end
                 end
                 FINISH: begin 
