@@ -3,7 +3,7 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, FallingEdge
+from cocotb.triggers import RisingEdge, FallingEdge, with_timeout
 from cocotb.triggers import ClockCycles
 from cocotb.types import Logic
 from cocotb.types import LogicArray
@@ -150,6 +150,30 @@ async def test_spi(dut):
 
     dut._log.info("SPI test completed successfully")
 
+async def wait_for_rising_edge_on_bit(signal, bit_index):
+    bit_mask = 1 << bit_index
+    while True:
+        await Edge(signal)
+        current_value = int(signal.value)
+        if (current_value & bit_mask) != 0:
+            await cocotb.triggers.Combine(Edge(signal), cocotb.triggers.event.Event()) # Use Combine to not hang
+            if (int(signal.value) >> bit_index) & 1:
+                previous_value = current_value 
+                await Edge(signal)
+                current_value = int(signal.value)
+                if not (previous_value & bit_mask) and (current_value & bit_mask):
+                   return # Rising edge detected
+
+async def wait_for_falling_edge_on_bit(signal, bit_index):
+    bit_mask = 1 << bit_index
+    last_bit_value = (int(signal.value) & bit_mask) != 0
+    while True:
+        await Edge(signal)
+        current_bit_value = (int(signal.value) & bit_mask) != 0
+        if last_bit_value and not current_bit_value:
+            return  # Falling edge detected
+        last_bit_value = current_bit_value
+
 @cocotb.test()
 async def test_pwm_freq(dut):
     # determine PWM freq by taking reciprocal of period. period = time_posedge_final - time_posedge_initial
@@ -181,13 +205,11 @@ async def test_pwm_freq(dut):
     await ClockCycles(dut.clk, 30000)
     
     # Determine time till first and second rising edge.
-    await Edge(dut.uo_out)
-    await Edge(dut.uo_out)
+    await wait_for_rising_edge_on_bit(dut.uo_out, 0)
     print(dut.uo_out)
     if (dut.uo_out[0].value == 1):
         edge_time_initial = get_sim_time(units="ns")
-    await Edge(dut.uo_out)
-    await Edge(dut.uo_out)
+    await wait_for_rising_edge_on_bit(dut.uo_out, 0)
     print(dut.uo_out)
     if (dut.uo_out[0].value == 1):
         edge_time_final = get_sim_time(units="ns")
@@ -229,11 +251,11 @@ async def test_pwm_duty(dut):
     await ClockCycles(dut.clk, 30000)
 
     # for 50% we know the freq is 3000Hz, lets just get the time between rising and falling edge of uo_out and divide by period
-    await RisingEdge(dut.uo_out)
+    await wait_for_rising_edge_on_bit(dut.uo_out, 0) 
     time_rising_edge = get_sim_time(units="ns") * 1.0e-9
-    await FallingEdge(dut.uo_out)
+    await wait_for_falling_edge_on_bit(dut.uo_out, 0)
     time_falling_edge = get_sim_time(units="ns") * 1.0e-9
-    await RisingEdge(dut.uo_out)
+    await wait_for_rising_edge_on_bit(dut.uo_out, 0)
     time_rising_edge2 = get_sim_time(units="ns") * 1.0e-9
     half_pwm_period = (time_rising_edge2 - time_rising_edge) * (0.5)
     active_time = time_falling_edge - time_rising_edge
